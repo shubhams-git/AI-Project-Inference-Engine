@@ -32,9 +32,3 @@ class ForwardChaining:
         
         return "NO"
 
-# Example usage:
-# Define your sentences and knowledge base according to your specific format and then:
-# fc = ForwardChaining(knowledge_base)
-# result = fc.solve('d')
-# print(result)
-
