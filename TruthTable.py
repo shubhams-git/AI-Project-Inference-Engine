@@ -35,4 +35,3 @@ class TruthTable:
         models = self.evaluate_knowledge_base(assignments)  # Evaluate these assignments
         result = self.check_query_entailment(query, models)  # Check if the query is entailed
         return result
-
