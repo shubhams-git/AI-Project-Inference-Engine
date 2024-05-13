@@ -31,4 +31,3 @@ class ForwardChaining:
             self.agenda.sort(key=lambda x: x[1])
         
         return "NO"
-
