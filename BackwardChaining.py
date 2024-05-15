@@ -1,3 +1,4 @@
+from KnowledgeBase import KnowledgeBase
 from Sentence import Sentence
 from CNFConverter import CNFConverter
 
@@ -15,13 +16,16 @@ class BackwardChaining:
     def bc_recursive(self, goal):
         if goal in self.inferred:
             return True
-        if any(goal == sentence.head and not sentence.conjuncts for sentence in self.kb.sentences):
+        # Check if the goal is a fact (unit clause)
+        if any(goal in sentence.symbols and len(sentence.root) == 1 for sentence in self.kb.sentences):
             if goal not in self.inferred:
                 self.inferred.append(goal)
             return True
+        # Explore each rule where goal appears in the head
         for rule in self.kb.sentences:
-            if rule.head == goal:
-                if all(self.bc_recursive(premise) for premise in rule.conjuncts):
+            if goal in rule.symbols:
+                # Recursively attempt to prove each of the premises
+                if all(self.bc_recursive(premise) for premise in rule.symbols if premise != goal):
                     if goal not in self.inferred:
                         self.inferred.append(goal)
                     return True

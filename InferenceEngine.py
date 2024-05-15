@@ -5,8 +5,11 @@ from Sentence import Sentence
 from TruthTable import TruthTable
 from ForwardChaining import ForwardChaining
 from BackwardChaining import BackwardChaining
+from ResolutionProver import ResolutionProver
+from CNFConverter import CNFConverter
 
 if __name__ == "__main__":
+
     if len(sys.argv) != 3:
         print("Enter command in following format: iengine method filename")
         print("Methods: TT, FC, BC, RP")
@@ -38,5 +41,9 @@ if __name__ == "__main__":
         kb = KnowledgeBase(tell, 'GS')
         bc = BackwardChaining(kb)
         print(bc.solve(ask))
+    elif method == 'RP':
+        kb = KnowledgeBase(tell, 'GS')
+        rp = ResolutionProver(kb)
+        print(rp.solve(ask))
     else:
         print("Unknown method entered.")

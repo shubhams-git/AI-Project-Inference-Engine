@@ -9,10 +9,17 @@ class Sentence:
         original = re.split(r"(=>|&|\(|\)|~|\|\||<=>)", sentence)
         self.original = [part.strip() for part in original if part.strip()]
 
-        symbols = re.split(r"=>|&|\(|\)|~|\|\||<=>", sentence)
-        self.symbols = [part.strip() for part in symbols if part.strip()]
+        # Adjust to handle negations correctly
+        symbols = re.split(r"=>|&|\(|\)|\|\||<=>", sentence)
+        self.symbols = [self.__combine_negation(part.strip()) for part in symbols if part.strip()]
 
         self.root = self.__parse(self.original)
+
+    def __combine_negation(self, part):
+        # Combine '~' with the following literal
+        if part.startswith('~'):
+            return part
+        return part
 
     def __parse(self, parts):
         while '(' in parts:
@@ -43,7 +50,7 @@ class Sentence:
         while index < len(parts):
             if parts[index] in operators:
                 if parts[index] == '~':
-                    atomic = [parts[index], parts[index + 1]]
+                    atomic = [parts[index] + parts[index + 1]]
                     atom_key = 'atom' + str(len(self.atomic) + 1)
                     self.atomic[atom_key] = atomic
                     parts[index:index + 2] = [atom_key]
@@ -70,3 +77,7 @@ class Sentence:
                 evaluations[atom_key] = evaluations[components[0].strip()] == evaluations[components[2].strip()]
         final_result = evaluations[self.root[0]]
         return final_result
+
+    def to_cnf(self):
+        # Converts the internal representation of the sentence to CNF
+        return self.root

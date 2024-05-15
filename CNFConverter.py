@@ -4,7 +4,9 @@ class CNFConverter:
         sentence = CNFConverter.eliminate_biconditionals_and_implications(sentence)
         sentence = CNFConverter.move_negations_inward(sentence)
         sentence = CNFConverter.distribute_disjunctions_over_conjunctions(sentence)
-        return sentence
+        cnf_clauses = CNFConverter.flatten_to_clauses(sentence.root)
+        print(f"CNF Clauses: {cnf_clauses}")
+        return cnf_clauses
 
     @staticmethod
     def eliminate_biconditionals_and_implications(sentence):
@@ -56,11 +58,15 @@ class CNFConverter:
     @staticmethod
     def distribute_disjunctions_over_conjunctions(sentence):
         def distribute(parts):
-            while '&' in parts:
-                i = parts.index('&')
-                left = parts[:i]
-                right = parts[i + 1:]
-                parts = CNFConverter.distribute(left, right)
+            i = 0
+            while i < len(parts):
+                if parts[i] == '||' and isinstance(parts[i-1], list) and isinstance(parts[i+1], list):
+                    left = parts[i-1]
+                    right = parts[i+1]
+                    parts = parts[:i-1] + CNFConverter.distribute_lists(left, right) + parts[i+2:]
+                    i = 0  # restart as we have modified the list
+                else:
+                    i += 1
             return parts
 
         parts = CNFConverter.flatten(sentence.root)
@@ -68,28 +74,31 @@ class CNFConverter:
         return sentence
 
     @staticmethod
+    def distribute_lists(left, right):
+        distributed = []
+        for l in left:
+            for r in right:
+                distributed.append(['(', l, '||', r, ')'])
+        return distributed
+
+    @staticmethod
     def apply_de_morgans(parts):
         result = []
         if parts[0] == '~' and parts[1] == '(':
             if parts[3] == '&':
                 result.append('(')
-                result.append('~')
-                result.append(parts[2])
+                result.append('~' + parts[2])
                 result.append('||')
-                result.append('~')
-                result.append(parts[4])
+                result.append('~' + parts[4])
                 result.append(')')
             elif parts[3] == '||':
                 result.append('(')
-                result.append('~')
-                result.append(parts[2])
+                result.append('~' + parts[2])
                 result.append('&')
-                result.append('~')
-                result.append(parts[4])
+                result.append('~' + parts[4])
                 result.append(')')
         elif parts[0] == '~':
-            result.append(parts[0])
-            result.append(parts[1])
+            result.append(parts[0] + parts[1])
         return result
 
     @staticmethod
@@ -103,12 +112,29 @@ class CNFConverter:
         return result
 
     @staticmethod
-    def distribute(left, right):
-        if '&' in right:
-            right_index = right.index('&')
-            return ['(', *CNFConverter.distribute(left, right[:right_index]), '&', *CNFConverter.distribute(left, right[right_index + 1:]), ')']
-        elif '&' in left:
-            left_index = left.index('&')
-            return ['(', *CNFConverter.distribute(left[:left_index], right), '&', *CNFConverter.distribute(left[left_index + 1:], right), ')']
-        else:
-            return ['(', *left, '||', *right, ')']
+    def flatten_to_clauses(parts):
+        clauses = []
+        current_clause = []
+        for part in parts:
+            if part == '&':
+                clauses.append(current_clause)
+                current_clause = []
+            elif part != '(' and part != ')':
+                current_clause.append(part)
+        if current_clause:
+            clauses.append(current_clause)
+        return clauses
+
+    @staticmethod
+    def expand_atomic(sentence, atomic_sentences):
+        def expand(parts):
+            expanded = []
+            for part in parts:
+                if part in atomic_sentences:
+                    expanded.extend(expand(atomic_sentences[part]))
+                else:
+                    expanded.append(part)
+            return expanded
+
+        sentence.root = expand(sentence.root)
+        return sentence
