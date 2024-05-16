@@ -1,6 +1,5 @@
 from itertools import product
 from Sentence import Sentence
-from CNFConverter import CNFConverter
 
 class TruthTable:
     def __init__(self, knowledge_base):

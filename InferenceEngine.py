@@ -5,8 +5,6 @@ from Sentence import Sentence
 from TruthTable import TruthTable
 from ForwardChaining import ForwardChaining
 from BackwardChaining import BackwardChaining
-from ResolutionProver import ResolutionProver
-from CNFConverter import CNFConverter
 
 if __name__ == "__main__":
 
@@ -34,16 +32,12 @@ if __name__ == "__main__":
         tt = TruthTable(kb)
         print(tt.solve(ask))
     elif method == 'FC':
-        kb = KnowledgeBase(tell, 'GS')
+        kb = KnowledgeBase(tell, 'HF')
         fc = ForwardChaining(kb)
         print(fc.solve(ask))
     elif method == 'BC':
-        kb = KnowledgeBase(tell, 'GS')
+        kb = KnowledgeBase(tell, 'HF')
         bc = BackwardChaining(kb)
         print(bc.solve(ask))
-    elif method == 'RP':
-        kb = KnowledgeBase(tell, 'GS')
-        rp = ResolutionProver(kb)
-        print(rp.solve(ask))
     else:
         print("Unknown method entered.")
