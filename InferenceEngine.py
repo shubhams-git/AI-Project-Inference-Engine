@@ -43,13 +43,19 @@ def main():
         query = Sentence(ask)
         print(tt.solve(query))
     elif method == 'FC':
-        kb = KnowledgeBase(tell, 'HF')  # Re-initialize KnowledgeBase with Horn-form sentences (HF)
-        fc = ForwardChaining(kb)
-        print(fc.solve(ask))
+        try:
+            kb = KnowledgeBase(tell, 'HF')  # Re-initialize KnowledgeBase with Horn-form sentences (HF)
+            fc = ForwardChaining(kb)
+            print(fc.solve(ask))
+        except Exception as e:
+            print(f"Error: {e}. Ensure the knowledge base contains only Horn-form sentences.")
     elif method == 'BC':
-        kb = KnowledgeBase(tell, 'HF')  # Re-initialize KnowledgeBase with Horn-form sentences (HF)
-        bc = BackwardChaining(kb)
-        print(bc.solve(ask))
+        try:
+            kb = KnowledgeBase(tell, 'HF')  # Re-initialize KnowledgeBase with Horn-form sentences (HF)
+            bc = BackwardChaining(kb)
+            print(bc.solve(ask))
+        except Exception as e:
+            print(f"Error: {e}. Ensure the knowledge base contains only Horn-form sentences.")
     elif method == 'RP':
         query = Sentence(ask)
         rp = ResolutionProver(kb, query)
