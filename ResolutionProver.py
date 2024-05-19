@@ -1,55 +1,78 @@
-import re
+from Sentence import Sentence
+from KnowledgeBase import KnowledgeBase
+import sympy
+from sympy.logic.boolalg import to_cnf, Not, Or
 
 class ResolutionProver:
-    def __init__(self, knowledge_base):
-        self.kb = knowledge_base
+    def __init__(self, kb, query):
+        self.kb = kb
+        self.query = query
+
+    def parse_kb(self):
+        clauses = []
+        for sentence in self.kb.sentences:
+            cnf = sentence.to_cnf_atomic()
+            clauses.extend(self.extract_clauses(cnf))
+        return clauses
+
+    def extract_clauses(self, cnf_expr):
+        if isinstance(cnf_expr, sympy.Or):
+            return [cnf_expr]
+        elif isinstance(cnf_expr, sympy.And):
+            return list(cnf_expr.args)
+        else:
+            return [cnf_expr]
+
+    def negate_query(self):
+        query_cnf = to_cnf(Not(self.query.to_cnf_atomic()))
+        return self.extract_clauses(query_cnf)
 
     def resolve(self, clause1, clause2):
-        resolved_clauses = []
-        literals1 = self.get_literals(clause1)
-        literals2 = self.get_literals(clause2)
-        for lit1 in literals1:
-            for lit2 in literals2:
-                if lit1 == self.negate_literal(lit2):
-                    resolvent = [l for l in literals1 if l != lit1] + [l for l in literals2 if l != lit2]
-                    resolvent = list(set(resolvent))  # Remove duplicates
-                    if not self.is_tautology(resolvent):
-                        resolved_clauses.append(resolvent)
-        return resolved_clauses
+        resolvents = []
+        clause1 = set(clause1.args) if isinstance(clause1, sympy.Or) else {clause1}
+        clause2 = set(clause2.args) if isinstance(clause2, sympy.Or) else {clause2}
+        
+        for literal in clause1:
+            complement = Not(literal)
+            if complement in clause2:
+                resolvent = (clause1 - {literal}) | (clause2 - {complement})
+                if len(resolvent) == 0:
+                    print(f"Resolved to empty clause: {clause1} and {clause2}")
+                    return True, []
+                resolvents.append(Or(*resolvent) if len(resolvent) > 1 else next(iter(resolvent)))
+        return False, resolvents
 
-    def get_literals(self, clause):
-        return re.findall(r'~?\w+', clause)
-
-    def negate_literal(self, literal):
-        return literal[1:] if literal.startswith('~') else '~' + literal
-
-    def is_tautology(self, clause):
-        literals = set(clause)
-        for literal in literals:
-            if self.negate_literal(literal) in literals:
-                return True
-        return False
-
-    def prove(self, query):
-        negated_query = self.negate_literal(query)
-        self.kb.tell('(' + negated_query + ')')
-        clauses = self.kb.get_clauses()
-
-        new_clauses = []
+    def solve(self):
+        clauses = self.parse_kb()
+        clauses.extend(self.negate_query())
+        
+        print("Initial clauses:")
+        for clause in clauses:
+            print(clause)
+        
+        new = set()
         while True:
-            n = len(clauses)
-            pairs = [(clauses[i], clauses[j]) for i in range(n) for j in range(i + 1, n)]
+            pairs = [(clauses[i], clauses[j]) for i in range(len(clauses)) for j in range(i + 1, len(clauses))]
+            found_new_resolvents = False
             for (clause1, clause2) in pairs:
-                resolvents = self.resolve(clause1, clause2)
-                for resolvent in resolvents:
-                    if resolvent == []:  # Empty clause means contradiction
-                        return True
-                    if resolvent not in new_clauses:
-                        new_clauses.append(resolvent)
-            if all(new_clause in clauses for new_clause in new_clauses):
+                is_resolved, resolvents = self.resolve(clause1, clause2)
+                if is_resolved:
+                    print("The query is proven.")
+                    return True
+                if resolvents:
+                    found_new_resolvents = True
+                    new.update(resolvents)
+                    print(f"New resolvent from {clause1} and {clause2}: {resolvents}")
+            if not found_new_resolvents:
+                print("No new clauses were generated. The query is not proven.")
                 return False
-            for new_clause in new_clauses:
-                if new_clause not in clauses:
-                    clauses.append(new_clause)
+            clauses.extend(new)
+            new.clear()
 
-        return False
+# Example usage
+if __name__ == "__main__":
+    kb = KnowledgeBase(["p2=>p3", "p3=>p1", "c=>e", "b&e=>f", "f&g=>h", "p2&p1&p3=>d", "p1&p3=>c", "a", "b", "p2"], 'GS')
+    query = Sentence("d")
+    rp = ResolutionProver(kb, query)
+    print("YES" if rp.solve() else "NO")
+

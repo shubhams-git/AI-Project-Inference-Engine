@@ -5,6 +5,7 @@ from Sentence import Sentence
 from TruthTable import TruthTable
 from ForwardChaining import ForwardChaining
 from BackwardChaining import BackwardChaining
+from ResolutionProver import ResolutionProver
 
 if __name__ == "__main__":
 
@@ -39,5 +40,10 @@ if __name__ == "__main__":
         kb = KnowledgeBase(tell, 'HF')
         bc = BackwardChaining(kb)
         print(bc.solve(ask))
+    elif method == 'RP':
+        kb = KnowledgeBase(tell, 'GS')
+        query = Sentence(ask)
+        rp = ResolutionProver(kb, query)
+        print(rp.solve())
     else:
         print("Unknown method entered.")
