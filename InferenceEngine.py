@@ -3,18 +3,17 @@ from FileReader import FileReader
 from KnowledgeBase import KnowledgeBase
 from Sentence import Sentence
 from TruthTable import TruthTable
-from HornForm import HornForm
 from ForwardChaining import ForwardChaining
 from BackwardChaining import BackwardChaining
+from ResolutionProver import ResolutionProver
 
 if __name__ == "__main__":
 
     if len(sys.argv) != 3:
         print("Enter command in following format: iengine method filename")
-        print("Methods: TT, FC and BC")
+        print("Methods: TT, FC, BC, RP")
         exit(0)
 
-    # get tell and ask from file of given name
     try:
         tell, ask = FileReader.read(sys.argv[2])
     except:
@@ -29,20 +28,22 @@ if __name__ == "__main__":
         sys.exit(0)
 
     method = sys.argv[1]
-    # set up knowledge base and method based on chosen method
-    # print solution using method and query (ask)
     if method == 'TT':
-        kb = KnowledgeBase(tell, 'GS') # setup knowledge base with general sentences
+        kb = KnowledgeBase(tell, 'GS')
         tt = TruthTable(kb)
         print(tt.solve(ask))
     elif method == 'FC':
-        kb = KnowledgeBase(tell, 'HF') # setup knowledge base with horn form
+        kb = KnowledgeBase(tell, 'HF')
         fc = ForwardChaining(kb)
         print(fc.solve(ask))
     elif method == 'BC':
         kb = KnowledgeBase(tell, 'HF')
         bc = BackwardChaining(kb)
         print(bc.solve(ask))
+    elif method == 'RP':
+        kb = KnowledgeBase(tell, 'GS')
+        query = Sentence(ask)
+        rp = ResolutionProver(kb, query)
+        print(rp.solve())
     else:
         print("Unknown method entered.")
-    

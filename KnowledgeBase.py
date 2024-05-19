@@ -28,4 +28,3 @@ class KnowledgeBase:
         for symbol in new.symbols:
             if symbol not in self.symbols:
                 self.symbols.append(symbol)
-
