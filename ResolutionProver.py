@@ -5,11 +5,22 @@ from sympy.logic.boolalg import to_cnf, Not, Or
 
 class ResolutionProver:
     def __init__(self, kb, query):
+        """
+        Initialize the ResolutionProver with a knowledge base and a query.
+        
+        :param kb: The knowledge base consisting of propositional logic sentences.
+        :param query: The query sentence to be resolved.
+        """
         self.kb = kb
         self.query = query
         self.step = 0
 
     def parse_kb(self):
+        """
+        Parse the knowledge base into a list of CNF clauses.
+        
+        :return: A list of CNF clauses derived from the knowledge base sentences.
+        """
         clauses = []
         for sentence in self.kb.sentences:
             cnf = sentence.to_cnf_atomic()
@@ -17,6 +28,12 @@ class ResolutionProver:
         return clauses
 
     def extract_clauses(self, cnf_expr):
+        """
+        Extract individual clauses from a CNF expression.
+        
+        :param cnf_expr: The CNF expression.
+        :return: A list of clauses (each clause is an instance of sympy.Or or a literal).
+        """
         if isinstance(cnf_expr, sympy.Or):
             return [cnf_expr]
         elif isinstance(cnf_expr, sympy.And):
@@ -25,10 +42,23 @@ class ResolutionProver:
             return [cnf_expr]
 
     def negate_query(self):
+        """
+        Negate the query and convert it into CNF.
+        
+        :return: A list of CNF clauses derived from the negated query.
+        """
         query_cnf = to_cnf(Not(self.query.to_cnf_atomic()))
         return self.extract_clauses(query_cnf)
 
     def resolve(self, clause1, clause2):
+        """
+        Resolve two clauses to find their resolvents.
+        
+        :param clause1: The first clause (a set of literals).
+        :param clause2: The second clause (a set of literals).
+        :return: A tuple (is_resolved, resolvents) where is_resolved is True if a contradiction is found,
+                 and resolvents is a list of resolvent clauses.
+        """
         resolvents = []
         clause1 = set(clause1.args) if isinstance(clause1, sympy.Or) else {clause1}
         clause2 = set(clause2.args) if isinstance(clause2, sympy.Or) else {clause2}
@@ -48,11 +78,16 @@ class ResolutionProver:
         return False, resolvents
 
     def solve(self):
+        """
+        Attempt to resolve the query using the resolution method.
+        
+        :return: True if the query is entailed by the knowledge base, False otherwise.
+        """
         clauses = self.parse_kb()
         negated_query_clauses = self.negate_query()
         clauses.extend(negated_query_clauses)
         
-        print("Initial clauses:")
+        print("Initial clauses in CNF:")
         for clause in clauses:
             print(clause)
         
