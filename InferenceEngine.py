@@ -7,19 +7,26 @@ from ForwardChaining import ForwardChaining
 from BackwardChaining import BackwardChaining
 from ResolutionProver import ResolutionProver
 
-if __name__ == "__main__":
+def main():
+    """
+    Main entry point for the inference engine.
+    Reads the input file and determines which inference method to use.
+    """
 
+    # Ensure correct command line arguments are provided
     if len(sys.argv) != 3:
-        print("Enter command in following format: iengine method filename")
+        print("Enter command in the following format: iengine method filename")
         print("Methods: TT, FC, BC, RP")
         exit(0)
 
+    # Read the input file
     try:
         tell, ask = FileReader.read(sys.argv[2])
-    except:
+    except FileNotFoundError:
         print("File not found.")
         sys.exit(0)
 
+    # Validate the input
     if len(tell) == 0:
         print("No tell found.")
         sys.exit(0)
@@ -27,23 +34,34 @@ if __name__ == "__main__":
         print("No ask found.")
         sys.exit(0)
 
+    # Determine the method to use
     method = sys.argv[1]
+    kb = KnowledgeBase(tell, 'GS')  # Initialize KnowledgeBase with general sentences (GS)
+
     if method == 'TT':
-        kb = KnowledgeBase(tell, 'GS')
         tt = TruthTable(kb)
-        print(tt.solve(ask))
+        query = Sentence(ask)
+        print(tt.solve(query))
     elif method == 'FC':
-        kb = KnowledgeBase(tell, 'HF')
-        fc = ForwardChaining(kb)
-        print(fc.solve(ask))
+        try:
+            kb = KnowledgeBase(tell, 'HF')  # Re-initialize KnowledgeBase with Horn-form sentences (HF)
+            fc = ForwardChaining(kb)
+            print(fc.solve(ask))
+        except Exception as e:
+            print(f"Error: {e}. Ensure the knowledge base contains only Horn-form sentences.")
     elif method == 'BC':
-        kb = KnowledgeBase(tell, 'HF')
-        bc = BackwardChaining(kb)
-        print(bc.solve(ask))
+        try:
+            kb = KnowledgeBase(tell, 'HF')  # Re-initialize KnowledgeBase with Horn-form sentences (HF)
+            bc = BackwardChaining(kb)
+            print(bc.solve(ask))
+        except Exception as e:
+            print(f"Error: {e}. Ensure the knowledge base contains only Horn-form sentences.")
     elif method == 'RP':
-        kb = KnowledgeBase(tell, 'GS')
         query = Sentence(ask)
         rp = ResolutionProver(kb, query)
-        print(rp.solve())
+        print("Resolution Theorem proved entailment." if rp.solve() else "Resolution Theorem couldn't prove entailment.")
     else:
         print("Unknown method entered.")
+
+if __name__ == "__main__":
+    main()
