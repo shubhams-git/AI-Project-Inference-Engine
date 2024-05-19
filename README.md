@@ -1,2 +1,3 @@
 # Assignment_2
-For the Unit Intro to AI
+
+- Make sure you run 'pip install sympy'
