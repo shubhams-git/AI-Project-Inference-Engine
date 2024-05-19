@@ -28,15 +28,24 @@ class Sentence:
         self.__process_operations(parts, ['<=>'])
         return parts
 
-    def __find_matching_parenthesis(self, parts, start_index):
+    def __find_matching_parenthesis(self, parts, start_index, direction="forward"):
         depth = 1
-        for index in range(start_index + 1, len(parts)):
-            if parts[index] == '(':
-                depth += 1
-            elif parts[index] == ')':
-                depth -= 1
-            if depth == 0:
-                return index
+        if direction == "forward":
+            for index in range(start_index + 1, len(parts)):
+                if parts[index] == '(':
+                    depth += 1
+                elif parts[index] == ')':
+                    depth -= 1
+                if depth == 0:
+                    return index
+        elif direction == "backward":
+            for index in range(start_index - 1, -1, -1):
+                if parts[index] == ')':
+                    depth += 1
+                elif parts[index] == '(':
+                    depth -= 1
+                if depth == 0:
+                    return index
         raise ValueError("Mismatched parentheses in expression")
 
     def __process_negations(self, parts):
@@ -78,6 +87,69 @@ class Sentence:
                 evaluations[atom_key] = evaluations[components[0].strip()] == evaluations[components[2].strip()]
         final_result = evaluations[self.root[0]]
         return final_result
+    
+    def eliminate_biconditionals(self, parts):
+        result = []
+        i = 0
+        while i < len(parts):
+            if parts[i] == '<=>':
+                # Get the full left expression
+                left_end = i - 1
+                if parts[left_end] == ')':
+                    left_start = self.__find_matching_parenthesis(parts, left_end)
+                else:
+                    left_start = left_end
+                left = parts[left_start:left_end + 1]
+
+                # Get the full right expression
+                right_start = i + 1
+                if parts[right_start] == '(':
+                    right_end = self.__find_matching_parenthesis(parts, right_start)
+                else:
+                    right_end = right_start
+                right = parts[right_start:right_end + 1]
+
+                # Transform the biconditional
+                transformed = ['('] + left + ['=>'] + right + [')', '&', '('] + right + ['=>'] + left + [')']
+                result = result[:left_start] + transformed  # Replace left part with the transformation
+                i = right_end  # Move index to the end of the right expression
+            else:
+                result.append(parts[i])
+            i += 1
+        return result
+    
+    def eliminate_implications(self, parts):
+        result = []
+        i = 0
+        while i < len(parts):
+            if parts[i] == '=>':
+                left_end = i - 1
+                if parts[left_end] == ')':
+                    left_start = self.__find_matching_parenthesis(parts, left_end, direction="backward")
+                else:
+                    left_start = left_end
+                left = parts[left_start:left_end + 1]
+
+                right_start = i + 1
+                if parts[right_start] == '(':
+                    right_end = self.__find_matching_parenthesis(parts, right_start)
+                else:
+                    right_end = right_start
+                right = parts[right_start:right_end + 1]
+
+                # Apply negation to the entire left expression
+                if left_start != left_end:
+                    negated_left = ['~'] + left
+                else:
+                    negated_left = ['~', '('] + left + [')']
+
+                result = result[:left_start] + negated_left + ['||'] + right
+                i = right_end  # Skip over the right expression
+            else:
+                result.append(parts[i])
+            i += 1
+        return result
+
 
     def to_cnf_atomic(self):
         resolved_atoms = {}
@@ -109,6 +181,7 @@ class Sentence:
             print(f"After moving negations inward: {parts}")
 
             # Distribute disjunctions over conjunctions
+            print(f"Before distributing disjunctions: {parts}")
             parts = self.distribute_disjunctions(parts)
             print(f"After distributing disjunctions: {parts}")
 
@@ -123,116 +196,127 @@ class Sentence:
         print(f"After final simplification: {cnf_expression}")
 
         return cnf_expression
-
-    def eliminate_biconditionals(self, parts):
-        result = []
-        i = 0
-        while i < len(parts):
-            if parts[i] == '<=>':
-                left = result.pop()
-                right = parts[i + 1]
-                result += ['(', left, '=>', right, ')', '&', '(', right, '=>', left, ')']
-                i += 1
-            else:
-                result.append(parts[i])
-            i += 1
-        return result
-
-    def eliminate_implications(self, parts):
-        result = []
-        i = 0
-        while i < len(parts):
-            if parts[i] == '=>':
-                left = result.pop()
-                right = parts[i + 1]
-                result += ['~' + left, '||', right]
-                i += 1
-            else:
-                result.append(parts[i])
-            i += 1
-        return result
-
+    
     def move_negations_inward(self, parts):
+        print("move_negations_inward entered with parts:", parts)
         result = []
         i = 0
         while i < len(parts):
-            if parts[i].startswith('~'):
-                negation_target = parts[i][1:].strip()
-                if negation_target == '(':
+            if parts[i] == '~':
+                if i + 1 < len(parts) and parts[i + 1] == '(':
+                    # Find the matching parenthesis
                     left_index = i + 1
                     right_index = self.__find_matching_parenthesis(parts, left_index)
-                    inner_parts = self.move_negations_inward(parts[left_index + 1:right_index])
-                    result += ['('] + inner_parts + [')']
+                    inner_parts = parts[left_index + 1:right_index]                    
+                    # Apply De Morgan's Law to the inner parts
+                    inner_result = []
+                    j = 0
+                    while j < len(inner_parts):
+                        if inner_parts[j] == '||':
+                            inner_result.append('&')
+                        elif inner_parts[j] == '&':
+                            inner_result.append('||')
+                        else:
+                            if inner_parts[j].startswith('~'):
+                                inner_result.append(inner_parts[j][1:])
+                            else:
+                                inner_result.append('~' + inner_parts[j])
+                        j += 1
+                    
+                    result.extend(inner_result)
                     i = right_index
-                elif negation_target.startswith('~'):
-                    # Double negation
-                    result.append(negation_target[1:])
-                elif negation_target in ['&', '||']:
-                    # Distribute negation over conjunction or disjunction
-                    left = parts[i + 1]
-                    right = parts[i + 3]
-                    if negation_target == '&':
-                        result += ['(', '~' + left, '||', '~' + right, ')']
-                    else:
-                        result += ['(', '~' + left, '&', '~' + right, ')']
-                    i += 3
                 else:
-                    result.append(parts[i])
+                    # Handle simple negation
+                    if parts[i + 1].startswith('~'):
+                        result.append(parts[i + 1][1:])
+                        i += 1
+                    else:
+                        result.append('~' + parts[i + 1])
+                        i += 1
             else:
                 result.append(parts[i])
             i += 1
+        print("move_negations_inward result:", result)
         return result
-
+    
     def distribute_disjunctions(self, parts):
+        print("~~~~~~distribute_disjunctions entered with parts:", parts)
+        
         def distribute(a, b):
-            if isinstance(a, list) and len(a) > 1 and a[0] == '&':
-                return ['&'] + [distribute(sub_a, b) for sub_a in a[1:] if sub_a != '&']
-            if isinstance(b, list) and len(b) > 1 and b[0] == '&':
-                return ['&'] + [distribute(a, sub_b) for sub_b in b[1:] if sub_b != '&']
-            return [a, '||', b]
+            print(f"Distribute called with a: {a}, b: {b}")
+            if isinstance(a, list) and '&' in a:
+                index = a.index('&')
+                left_a = a[:index]
+                right_a = a[index + 1:]
+                print(f"AND detected in a. Left: {left_a}, Right: {right_a}")
+                result = ['&'] + [distribute(left_a + [right_a_part], b) for right_a_part in right_a]
+                print(f"Result after distributing over a: {result}")
+                return result
+            if isinstance(b, list) and '&' in b:
+                index = b.index('&')
+                left_b = b[:index]
+                right_b = b[index + 1:]
+                print(f"AND detected in b. Left: {left_b}, Right: {right_b}")
+                result = ['&'] + [distribute(a, left_b + [right_b_part]) for right_b_part in right_b]
+                print(f"Result after distributing over b: {result}")
+                return result
+            result = a+['||']+ b
+            print(f"Distribute result: {result}")
+            return result
 
         def split_and_clauses(expression):
+            print(f"split_and_clauses called with expression: {expression}")
             if isinstance(expression, list) and '&' in expression:
                 clauses = []
                 current_clause = []
                 for token in expression:
                     if token == '&':
                         if current_clause:
-                            clauses.append(current_clause)
+                            clauses.extend(current_clause)
                         current_clause = []
                     else:
-                        current_clause.append(token)
-                if current_clause:
+                        current_clause.extend(token)
+                if (current_clause):
                     clauses.append(current_clause)
+                print(f"Clauses after splitting: {clauses}")
                 return clauses
             return [expression]
 
         def distribute_all(parts):
-            if isinstance(parts, list) and '||' in parts:
+            print(f"distribute_all called with parts: {parts}")
+            if '||' in parts:
                 index = parts.index('||')
                 left = parts[:index]
                 right = parts[index + 1:]
-                distributed = distribute(left, right)
-                if '&' in distributed:
-                    return split_and_clauses(distributed)
-                return [distributed]
+                print(f"'||' detected. Left: {left}, Right: {right}")
+                if '&' in left or '&' in right:
+                    distributed = distribute(left, right)
+                    if '&' in distributed:
+                        result = split_and_clauses(distributed)
+                        print(f"Result after splitting clauses: {result}")
+                        return result
+                    print(f"Distributed without splitting: {distributed}")
+                    return [distributed]
+                else:
+                    return [parts]
             return [parts]
 
         while True:
             new_parts = []
             for clause in parts:
-                if isinstance(clause, list) and '||' in clause:
-                    new_parts.extend(distribute_all(clause))
+                if '||' in clause:
+                    new_parts.extend(distribute_all(parts))
                 else:
                     new_parts.append(clause)
             if new_parts == parts:
                 break
             parts = new_parts
 
-        return parts
-    
+        print(f"~~~~~~Final distributed parts: {new_parts}")
+        return new_parts
+
+
     def simplify_expression(self, parts):
-        # Flatten nested expressions
         def flatten(parts):
             stack = []
             for part in parts:
@@ -255,7 +339,6 @@ class Sentence:
                     stack.append(part)
             return stack
 
-        # Remove redundant parentheses for disjunctions
         def remove_redundant_parentheses(parts):
             i = 0
             while i < len(parts):
@@ -271,7 +354,6 @@ class Sentence:
                 i += 1
             return parts
 
-        # Helper function to recursively simplify expressions inside parentheses
         def recursive_simplify(parts):
             i = 0
             while i < len(parts):
@@ -289,11 +371,8 @@ class Sentence:
             parts = remove_redundant_parentheses(parts)
             return parts
 
-        # Maintain correct structure for conjunctions
         def handle_conjunctions(parts):
-            # Remove all parentheses first
             parts = [part for part in parts if part != '(' and part != ')']
-            # Add parentheses around expressions with '&'
             new_parts = []
             current_clause = []
             for part in parts:
@@ -315,9 +394,10 @@ class Sentence:
         parts = recursive_simplify(parts)
         parts = handle_conjunctions(parts)
         return parts
-
-# Example usage:
-sentence = Sentence("(a => (c => ~d)) & b & (b => a)")
-cnf = sentence.to_cnf_atomic()
-print(f"Original expression: (a => (c => ~d)) & b & (b => a)")
-print(f"CNF expression: {' '.join(cnf)}")
+    
+if __name__ == "__main__":
+    # Example usage:
+    sentence = Sentence("(c => d) => a")
+    cnf = sentence.to_cnf_atomic()
+    print(f"Original expression: (c => d) => a")
+    print(f"CNF expression: {' '.join(cnf)}")
