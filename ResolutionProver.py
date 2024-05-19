@@ -7,6 +7,7 @@ class ResolutionProver:
     def __init__(self, kb, query):
         self.kb = kb
         self.query = query
+        self.step = 0
 
     def parse_kb(self):
         clauses = []
@@ -36,38 +37,44 @@ class ResolutionProver:
             complement = Not(literal)
             if complement in clause2:
                 resolvent = (clause1 - {literal}) | (clause2 - {complement})
+                self.step += 1
                 if len(resolvent) == 0:
-                    print(f"Resolved to empty clause: {clause1} and {clause2}")
+                    print(f"{self.step}. Resolve {clause1} with {clause2} -> Contradiction: ∅")
                     return True, []
-                resolvents.append(Or(*resolvent) if len(resolvent) > 1 else next(iter(resolvent)))
+                else:
+                    resolvent_expr = Or(*resolvent) if len(resolvent) > 1 else next(iter(resolvent))
+                    print(f"{self.step}. Resolve {clause1} with {clause2} -> Resolvent: {resolvent_expr}")
+                    resolvents.append(resolvent_expr)
         return False, resolvents
 
     def solve(self):
         clauses = self.parse_kb()
-        clauses.extend(self.negate_query())
+        negated_query_clauses = self.negate_query()
+        clauses.extend(negated_query_clauses)
         
         print("Initial clauses:")
         for clause in clauses:
             print(clause)
         
-        new = set()
-        while True:
-            pairs = [(clauses[i], clauses[j]) for i in range(len(clauses)) for j in range(i + 1, len(clauses))]
+        new = set(negated_query_clauses)
+        while new:
             found_new_resolvents = False
-            for (clause1, clause2) in pairs:
+            clause1 = new.pop()
+            for clause2 in clauses:
+                if clause1 == clause2:
+                    continue
                 is_resolved, resolvents = self.resolve(clause1, clause2)
                 if is_resolved:
-                    print("The query is proven.")
+                    print(f"Since we have derived a contradiction (∅), the query {self.query.original} is entailed by the KB.")
                     return True
                 if resolvents:
                     found_new_resolvents = True
                     new.update(resolvents)
-                    print(f"New resolvent from {clause1} and {clause2}: {resolvents}")
             if not found_new_resolvents:
                 print("No new clauses were generated. The query is not proven.")
                 return False
-            clauses.extend(new)
-            new.clear()
+            clauses.append(clause1)
+            new.update(negated_query_clauses)
 
 # Example usage
 if __name__ == "__main__":
@@ -75,4 +82,3 @@ if __name__ == "__main__":
     query = Sentence("d")
     rp = ResolutionProver(kb, query)
     print("YES" if rp.solve() else "NO")
-
