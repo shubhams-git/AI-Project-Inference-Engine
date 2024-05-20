@@ -14,14 +14,18 @@ def main():
     """
 
     # Ensure correct command line arguments are provided
-    if len(sys.argv) != 3:
-        print("Enter command in the following format: iengine method filename")
+    if len(sys.argv) < 3:
+        print("Enter command in the following format: iengine method filename [-d]")
         print("Methods: TT, FC, BC, RP")
         exit(0)
 
+    # Check if debug mode is enabled
+    debug_mode = "-d" in sys.argv
+    filename_index = 3 if debug_mode else 2
+
     # Read the input file
     try:
-        tell, ask = FileReader.read(sys.argv[2])
+        tell, ask = FileReader.read(sys.argv[filename_index])
     except FileNotFoundError:
         print("File not found.")
         sys.exit(0)
@@ -58,8 +62,8 @@ def main():
             print(f"Error: {e}. Ensure the knowledge base contains only Horn-form sentences.")
     elif method == 'RP':
         query = Sentence(ask)
-        rp = ResolutionProver(kb, query)
-        print("Resolution Theorem proved entailment." if rp.solve() else "Resolution Theorem couldn't prove entailment.")
+        rp = ResolutionProver(kb, query, debug=debug_mode)
+        print("YES" if rp.solve() else "NO")
     else:
         print("Unknown method entered.")
 
