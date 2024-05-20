@@ -52,7 +52,7 @@ SymPy is a Python library for symbolic mathematics. In this project, SymPy is us
 
 2. Navigate to the cloned repository:
     ```bash
-    cd Logical-Inference-Engine
+    cd Assignment_2
     ```
 
 3. Install required Python packages:
@@ -105,9 +105,9 @@ Uses the resolution theorem proving method to infer the query from the knowledge
 - `BackwardChaining.py`: Class implementing backward chaining algorithm.
 - `TruthTable.py`: Class implementing truth table method.
 - `ResolutionProver.py`: Class implementing resolution theorem proving method.
-- `tests/`: Directory containing test files and test scripts.
-  - `test_inference_engine.py`: Script for automated testing of the inference engine.
-  - `test_reports/`: Directory for storing test report files.
+- `test_inference_engine.py`: Script for automated testing of the inference engine. The following files are created upon running this script.
+    - `tests/`: Directory containing test files and test scripts.
+    - `test_reports/`: Directory for storing test report HTML format for better data visualisation of test results.
 
 ## Testing
 1. To run automated tests across various scenarios:
