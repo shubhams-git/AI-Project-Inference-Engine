@@ -9,26 +9,31 @@ class TestInferenceEngine(unittest.TestCase):
     Unit test class for the Inference Engine.
     """
     kb_files = [
-        # Horn-based KB (test1.txt)
-        {"file_content": "TELL\np2=> p3; p3 => p1; c => e; b&e => f; f&g => h; p2&p1&p3 => d; p1&p3 => c; a; b; p2;\nASK\nd", "filename": "test_1.txt", "methods": ["FC", "BC", "TT", "RP"]},
+
+        #  Simple query with simple Horn-based KB (test1.txt)
+        {"file_content": "TELL\nr1 => r2; r2 => r3; r3 => r5; r1;\nASK\nr5", "filename": "test_1.txt", "methods": ["FC", "BC", "TT", "RP"]},
+
+        # Simple query with complex Horn-based KB (test2.txt)
+        {"file_content": "TELL\np2=> p3; p3 => p1; c => e; b&e => f; f&g => h; p2&p1&p3 => d; p1&p3 => c; a; b; p2;\nASK\nd", "filename": "test_2.txt", "methods": ["FC", "BC", "TT", "RP"]},
+
+        # Complex query with Horn-based KB (test3.txt)
+        {"file_content": "TELL\np2=> p3; p3 => p1; c => e; b&e => f; f&g => h; p2&p1&p3 => d; p1&p3 => c; a; b; p2;\nASK\n(d&b)=>a", "filename": "test_3.txt", "methods": ["FC", "BC", "TT", "RP"]},
+
+        # Query "z" is not present in the KB (test4.txt)
+        {"file_content": "TELL\np2 => p3; p3 => p1; c => e; b & e => f; f & g => h; p2 & p1 & p3 => d; p1 & p3 => c; a; b; p2;\nASK\nz", "filename": "test_4.txt", "methods": ["FC", "BC", "TT", "RP"]},
         
-        # General KB (test2.txt)
-        {"file_content": "TELL\n(a <=> (c => ~d)) & b & (b => a); c; ~f || g;\nASK\nd", "filename": "test_2.txt", "methods": ["TT", "RP"]},
+        # Simple query with General KB (test5.txt)
+        {"file_content": "TELL\n(a <=> (c => ~d)) & b & (b => a); c; ~f || g;\nASK\nd", "filename": "test_5.txt", "methods": ["TT", "RP"]},
         
-        # Complex Query (test3.txt)
-        {"file_content": "TELL\n(a <=> (c => ~d)) & b & (b => a); c; ~f || g;\nASK\n~d & (~g => ~f)", "filename": "test_3.txt", "methods": ["TT", "RP"]},
+        # Complex Query with General KB (test6.txt)
+        {"file_content": "TELL\n(a <=> (c => ~d)) & b & (b => a); c; ~f || g;\nASK\n~d & (~g => ~f)", "filename": "test_6.txt", "methods": ["TT", "RP"]},
         
-        # Additional Horn-based KB (test4.txt)
-        {"file_content": "TELL\nq1 => q2; q2 => q3; q3 => q4; q1; q5 => q6; q6 => q7; q7 => q8; q5;\nASK\nq4", "filename": "test_4.txt", "methods": ["FC", "BC", "TT", "RP"]},
+        # Horn-based KB with facts in between implies statements (test7.txt)
+        {"file_content": "TELL\nq1 => q2; q2 => q3; q3 => q4; q1; q5 => q6; q6 => q7; q7 => q8; q5;\nASK\nq4", "filename": "test_7.txt", "methods": ["FC", "BC", "TT", "RP"]},
         
-        # General KB with mixed operators (test5.txt)
-        {"file_content": "TELL\n(m => n) & (~n => p) | q; r <=> (s & t); u & (v || ~w);\nASK\np", "filename": "test_5.txt", "methods": ["TT", "RP"]},
+        # Complex Query with KB containing Negations(test8.txt)
+        {"file_content": "TELL\np2=> p3; p3 => p1; c => e; b&e => f; f&g => h; p2&p1&p3 => ~d; p1&p3 => c; a; b; p2;\nASK\n~d", "filename": "test_8.txt", "methods": ["TT", "RP"]},
         
-        # Complex Query (test6.txt)
-        {"file_content": "TELL\n(x => y) & (y <=> z) & (z => ~w); a & b & (c || d);\nASK\n~w & (~d => a)", "filename": "test_6.txt", "methods": ["TT", "RP"]},
-        
-        # Horn-based KB with conjunctions (test7.txt)
-        {"file_content": "TELL\nr1 => r2; r2 => r3; r3 & r4 => r5; r1; r4;\nASK\nr5", "filename": "test_7.txt", "methods": ["FC", "BC", "TT", "RP"]}
     ]
 
     @classmethod

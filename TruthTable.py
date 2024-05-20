@@ -44,7 +44,11 @@ class TruthTable:
         """
         query_expr = query.to_sympy_expr(query.root[0])
         for model in satisfying_models:
-            if not query.solve(model):
+            # Check if all symbols in the query are in the model
+            if all(symbol in model for symbol in query.symbols):
+                if not query.solve(model):
+                    return "NO"
+            else:
                 return "NO"
         return "YES: " + str(self.count)
 
