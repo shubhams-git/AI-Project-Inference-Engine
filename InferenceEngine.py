@@ -21,7 +21,7 @@ def main():
 
     # Check if debug mode is enabled
     debug_mode = "-d" in sys.argv
-    filename_index = 3 if debug_mode else 2
+    filename_index = 2
 
     # Read the input file
     try:
