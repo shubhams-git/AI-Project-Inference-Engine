@@ -65,12 +65,18 @@ class ResolutionProver:
         :return: A list of CNF clauses derived from the negated query.
         """
         query_expr = self.query.to_sympy_expr(self.query.root[0])
-        negated_query_expr = Not(query_expr)
 
-        if not self.is_cnf(negated_query_expr):
-            negated_query_cnf = to_cnf(negated_query_expr, simplify=True)
+        # First, convert the query expression to CNF
+        if not self.is_cnf(query_expr):
+            query_cnf = to_cnf(query_expr, simplify=True)
         else:
-            negated_query_cnf = negated_query_expr
+            query_cnf = query_expr
+
+        # Negate the CNF query expression
+        negated_query_expr = Not(query_cnf)
+
+        # Convert the negated query expression to CNF
+        negated_query_cnf = to_cnf(negated_query_expr, simplify=True)
 
         return self.extract_clauses(negated_query_cnf)
 
@@ -173,7 +179,7 @@ class ResolutionProver:
 if __name__ == "__main__":
     import sys
     debug_mode = "-d" in sys.argv
-    kb = KnowledgeBase(["(a <=> (c => ~d)) & b & (b => a)"], 'GS')
+    kb = KnowledgeBase(["(a <=> (c => ~d)) & b & (b => a)", "c", "~f || g"], 'GS')
     query = Sentence("d")
     rp = ResolutionProver(kb, query, debug=debug_mode)
     print("YES" if rp.solve() else "NO")
