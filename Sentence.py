@@ -181,8 +181,36 @@ class Sentence:
             sympy.Expr: The CNF representation of the root sentence.
         """
         root_expr = self.to_sympy_expr(self.root[0])
-        cnf_expr = to_cnf(root_expr, simplify=True)
+        
+        # Explicitly convert specific parts to CNF
+        if isinstance(root_expr, And):
+            clauses = []
+            for arg in root_expr.args:
+                if isinstance(arg, (Implies, Equivalent)):
+                    cnf_part = to_cnf(arg, simplify=True)
+                    clauses.append(cnf_part)
+                else:
+                    clauses.append(arg)
+            cnf_expr = And(*clauses)
+        else:
+            if self.is_cnf(root_expr):
+                return root_expr
+            cnf_expr = to_cnf(root_expr, simplify=True)
+        
         return cnf_expr
+
+    def is_cnf(self, expr):
+        """
+        Check if a given SymPy expression is in CNF form.
+        
+        :param expr: The SymPy expression to check.
+        :return: True if the expression is in CNF, False otherwise.
+        """
+        if isinstance(expr, sympy.And):
+            return all(self.is_cnf(arg) for arg in expr.args)
+        if isinstance(expr, sympy.Or):
+            return all(not isinstance(arg, sympy.And) for arg in expr.args)
+        return not isinstance(expr, (sympy.And, sympy.Or))
 
 if __name__ == "__main__":
     # Example usage:

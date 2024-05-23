@@ -23,16 +23,16 @@ class TestInferenceEngine(unittest.TestCase):
         {"file_content": "TELL\np2 => p3; p3 => p1; c => e; b & e => f; f & g => h; p2 & p1 & p3 => d; p1 & p3 => c; a; b; p2;\nASK\nz", "filename": "test_4.txt", "methods": ["FC", "BC", "TT", "RP"]},
         
         # Simple query with General KB (test5.txt)
-        {"file_content": "TELL\n(a <=> (c => ~d)) & b & (b => a); c; ~f || g;\nASK\nd", "filename": "test_5.txt", "methods": ["TT", "RP"]},
+        {"file_content": "TELL\n(a <=> (c => ~d)) & b & (b => a); c; ~f || g;\nASK\nd", "filename": "test_5.txt", "methods": ["TT", "RP", "DPLL"]},
         
         # Complex Query with General KB (test6.txt)
-        {"file_content": "TELL\n(a <=> (c => ~d)) & b & (b => a); c; ~f || g;\nASK\n~d & (~g => ~f)", "filename": "test_6.txt", "methods": ["TT", "RP"]},
+        {"file_content": "TELL\n(a <=> (c => ~d)) & b & (b => a); c; ~f || g;\nASK\n~d & (~g => ~f)", "filename": "test_6.txt", "methods": ["TT", "RP", "DPLL"]},
         
         # Horn-based KB with facts in between implies statements (test7.txt)
         {"file_content": "TELL\nq1 => q2; q2 => q3; q3 => q4; q1; q5 => q6; q6 => q7; q7 => q8; q5;\nASK\nq4", "filename": "test_7.txt", "methods": ["FC", "BC", "TT", "RP"]},
         
         # Complex Query with KB containing Negations(test8.txt)
-        {"file_content": "TELL\np2=> p3; p3 => p1; c => e; b&e => f; f&g => h; p2&p1&p3 => ~d; p1&p3 => c; a; b; p2;\nASK\n~d", "filename": "test_8.txt", "methods": ["TT", "RP"]},
+        {"file_content": "TELL\np2=> p3; p3 => p1; c => e; b&e => f; f&~g => ~h; p2&p1&p3 => d; p1&p3 => c; a; b; p2;\nASK\nd", "filename": "test_8.txt", "methods": ["TT", "RP", "DPLL"]},
         
     ]
 
