@@ -87,7 +87,7 @@ class ResolutionProver:
         :param clause1: The first clause (a set of literals).
         :param clause2: The second clause (a set of literals).
         :return: A tuple (is_resolved, resolvents) where is_resolved is True if a contradiction is found,
-                 and resolvents is a list of resolvent clauses.
+                and resolvents is a list of resolvent clauses.
         """
         resolvents = []
         clause1 = set(clause1.args) if isinstance(clause1, sympy.Or) else {clause1}
@@ -96,7 +96,11 @@ class ResolutionProver:
         for literal in clause1:
             complement = Not(literal)
             if complement in clause2:
+                if literal in self.resolved_literals or complement in self.resolved_literals:
+                    continue
                 resolvent = (clause1 - {literal}) | (clause2 - {complement})
+                self.resolved_literals.add(literal)
+                self.resolved_literals.add(complement)
                 self.step += 1
                 if self.debug:
                     if len(resolvent) == 0:
@@ -130,6 +134,7 @@ class ResolutionProver:
 
         new = set(negated_query_clauses)
         processed = set()
+        self.resolved_literals = set()  # Initialize resolved literals tracking
 
         if self.debug:
             print("Starting the Resolution Process")
@@ -150,6 +155,21 @@ class ResolutionProver:
                     return True
                 for resolvent in resolvents:
                     if resolvent not in clauses and resolvent not in new:
+                        if isinstance(resolvent, sympy.Symbol):
+                            # Single literal case
+                            all_resolved = resolvent in self.resolved_literals or Not(resolvent) in self.resolved_literals
+                        else:
+                            # Multiple literals case (Or expression)
+                            all_resolved = all(literal in self.resolved_literals or Not(literal) in self.resolved_literals for literal in resolvent.args)
+                        
+                        if all_resolved:
+                            # All literals in the resolvent have already been resolved
+                            if self.debug:
+                                print("-" * 40)
+                                print(f"All literals in the resolvent {resolvent} have already been resolved.")
+                                print(f"Since we have derived a contradiction (∅), the query {self.query.original} is entailed by the KB.")
+                                print("-" * 40)
+                            return True
                         new.add(resolvent)
                         found_new_resolvents = True
             if not found_new_resolvents:
@@ -161,6 +181,8 @@ class ResolutionProver:
             clauses.append(clause1)
             processed.add(clause1)
         return False
+
+
 
     def is_cnf(self, expr):
         """
@@ -180,6 +202,6 @@ if __name__ == "__main__":
     import sys
     debug_mode = "-d" in sys.argv
     kb = KnowledgeBase(["(a <=> (c => ~d)) & b & (b => a)", "c", "~f || g"], 'GS')
-    query = Sentence("d")
+    query = Sentence("~d")
     rp = ResolutionProver(kb, query, debug=debug_mode)
     print("YES" if rp.solve() else "NO")
