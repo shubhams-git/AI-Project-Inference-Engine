@@ -4,15 +4,18 @@ import sympy
 
 class DPLL:
     def __init__(self, knowledge_base, query, debug=False):
+        """Initialize the DPLL solver with a knowledge base, a query, and an optional debug mode."""
         self.kb = knowledge_base
         self.query = query
         self.debug = debug
 
     def debug_print(self, *args, **kwargs):
+        """Print debug messages if debugging is enabled."""
         if self.debug:
             print(*args, **kwargs)
     
     def solve(self):
+        """Solve the query using the DPLL algorithm."""
         self.debug_print("Starting DPLL algorithm...")
         clauses = self.parse_kb()
         self.debug_print("Initial clauses from knowledge base:")
@@ -35,6 +38,7 @@ class DPLL:
         return result
     
     def parse_kb(self):
+        """Parse the knowledge base and convert it to a list of clauses in CNF."""
         clauses = []
         for sentence in self.kb.sentences:
             cnf = to_cnf(sentence.to_sympy_expr(sentence.root[0]))
@@ -42,6 +46,7 @@ class DPLL:
         return clauses
 
     def extract_clauses(self, cnf_expr):
+        """Extract clauses from a CNF expression."""
         if isinstance(cnf_expr, sympy.Or):
             return [cnf_expr]
         elif isinstance(cnf_expr, sympy.And):
@@ -50,25 +55,27 @@ class DPLL:
             return [cnf_expr]
 
     def negate_query(self):
+        """Negate the query and convert it to CNF."""
         query_expr = self.query.to_sympy_expr(self.query.root[0])
         query_cnf = to_cnf(Not(query_expr))
         return self.extract_clauses(query_cnf)
 
     def dpll(self, clauses, symbols, model):
+        """Apply the DPLL algorithm to determine satisfiability."""
         self.debug_print("\nCurrent model:", model)
         self.debug_print("Remaining clauses:")
         for clause in clauses:
             self.debug_print(f"  {clause}")
         self.debug_print("Remaining symbols:", symbols)
 
-        # Base case: all clauses are satisfied
+        # Base case: check if all clauses are satisfied
         all_satisfied = all(self.evaluate(clause, model) is True for clause in clauses)
         self.debug_print(f"All clauses satisfied check: {all_satisfied}")
         if all_satisfied:
             self.debug_print("All clauses satisfied with current model.")
             return True
         
-        # Base case: any clause is unsatisfied
+        # Base case: check if any clause is unsatisfied
         unsat_clauses = [clause for clause in clauses if self.evaluate(clause, model) is False]
         if unsat_clauses:
             self.debug_print(f"Unsatisfied clauses: {unsat_clauses}")
@@ -82,10 +89,7 @@ class DPLL:
             unit = unit_clauses.pop()
             literal = unit if isinstance(unit, sympy.Symbol) else next(iter(unit.args))
             if isinstance(literal, Not):
-                neg_literal = literal
                 literal = literal.args[0]
-            else:
-                neg_literal = Not(literal)
 
             self.debug_print(f"  Unit clause found: {unit}. Propagating {literal}.")
             model[literal] = True
@@ -129,6 +133,7 @@ class DPLL:
         return self.dpll(clauses, rest, new_model)
 
     def find_unit_clauses(self, clauses):
+        """Identify unit clauses from the list of clauses."""
         unit_clauses = []
         self.debug_print("\nFinding unit clauses...")
         for clause in clauses:
@@ -142,6 +147,7 @@ class DPLL:
         return unit_clauses
 
     def simplify(self, clauses, literal):
+        """Simplify the clause set given a literal assignment."""
         new_clauses = []
         self.debug_print(f"Simplifying clauses with {literal} set to True")
         for clause in clauses:
@@ -167,6 +173,7 @@ class DPLL:
         return new_clauses
 
     def evaluate(self, clause, model):
+        """Evaluate a clause under the current model."""
         if isinstance(clause, sympy.Symbol):
             return model.get(clause, None)
         if isinstance(clause, Not):
@@ -195,7 +202,7 @@ if __name__ == "__main__":
     debug_mode = True  # Ensure debug mode is enabled
     from KnowledgeBase import KnowledgeBase
 
-    # Example 1: Original example
+    # Example usage
     tell = ["a", "a => b", "b => c", "b&c=>d", "d=>e"]
     ask = "e"
     kb = KnowledgeBase(tell, 'GS')
