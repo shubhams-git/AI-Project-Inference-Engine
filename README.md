@@ -2,7 +2,7 @@ README.md
 
 # Inference Engine
 
-This project implements an inference engine for propositional logic using various methods such as Forward Chaining, Backward Chaining, Truth Table, and Resolution Prover. The engine can be used to determine if a query can be inferred from a given knowledge base.
+This project implements an inference engine for propositional logic using various methods such as Forward Chaining, Backward Chaining, Truth Table, Resolution Prover, and DPLL. The engine can be used to determine if a query can be inferred from a given knowledge base.
 
 ## Table of Contents
 
@@ -17,6 +17,7 @@ This project implements an inference engine for propositional logic using variou
   - [Backward Chaining (BC)](#backward-chaining-bc)
   - [Truth Table (TT)](#truth-table-tt)
   - [Resolution Prover (RP)](#resolution-prover-rp)
+  - [DPLL (Davis-Putnam-Logemann-Loveland)](#dpll-davis-putnam-logemann-loveland)
 - [File Structure](#file-structure)
 - [Testing](#testing)
 - [Contributing](#contributing)
@@ -34,9 +35,9 @@ The core of this project is developed using Python. The implementation uses Obje
 SymPy is a Python library for symbolic mathematics. In this project, SymPy is used to convert logical sentences into Conjunctive Normal Form (CNF) and to handle logical expressions.
 
 ## Features
-- **Multiple Inference Methods**: Includes Truth Table, Forward Chaining, Backward Chaining, and Resolution Prover.
+- **Multiple Inference Methods**: Includes Truth Table, Forward Chaining, Backward Chaining, Resolution Prover, and DPLL.
 - **Automated Testing Framework**: Facilitates the evaluation of inference methods against predefined test cases to ensure accuracy and reliability.
-- **Debugging Mode**: Provides detailed steps for the resolution method when enabled, enhancing understanding of the inference process.
+- **Debugging Mode**: Provides detailed steps for the resolution and DPLL methods when enabled, enhancing understanding of the inference process.
 
 ## Getting Started
 
@@ -68,7 +69,7 @@ SymPy is a Python library for symbolic mathematics. In this project, SymPy is us
 
 - Replace **<method>** with one of the supported methods: TT, FC, BC, RP.
 - Replace **<filename>** with the path to your input file containing the knowledge base and query.
-- Optionally, add **-d** for debug mode when using the Resolution Prover.
+- Optionally, add **-d** for debug mode when using the Resolution Prover or DPLL.
 
 ### Example
 
@@ -94,6 +95,10 @@ Uses truth tables to infer the query from the knowledge base. Works with both Ho
 
 Uses the resolution theorem proving method to infer the query from the knowledge base. Works with both Horn-form and general sentences.
 
+### DPLL (Davis-Putnam-Logemann-Loveland)
+
+Uses the DPLL algorithm to infer the query from the knowledge base. This method involves unit propagation, pure literal elimination, and recursive backtracking to determine satisfiability. Works with both Horn-form and general sentences.
+
 ## File Structure
 
 - `InferenceEngine.py`: Main script to run the inference engine.
@@ -105,6 +110,7 @@ Uses the resolution theorem proving method to infer the query from the knowledge
 - `BackwardChaining.py`: Class implementing backward chaining algorithm.
 - `TruthTable.py`: Class implementing truth table method.
 - `ResolutionProver.py`: Class implementing resolution theorem proving method.
+- `DPLL.py`: Class implementing the DPLL algorithm.
 - `test_inference_engine.py`: Script for automated testing of the inference engine. The following files are created upon running this script.
     - `tests/`: Directory containing test files and test scripts.
     - `test_reports/`: Directory for storing test report HTML format for better data visualisation of test results.
