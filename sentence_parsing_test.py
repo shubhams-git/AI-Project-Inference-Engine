@@ -15,7 +15,7 @@ def test_cnf_conversion(expression):
         print(f"Error converting expression '{expression}' to CNF: {str(e)}")
 
 if __name__ == "__main__":
-    expression = "(a <=> (c => ~d)) & b & (b => a)"    
+    expression = "((a&b=>c)&(b=>c)) & (b=>a) & c"    
     print(f"Testing expression: {expression}")
     test_sentence(expression)
     print("-" * 40)

@@ -6,6 +6,7 @@ from TruthTable import TruthTable
 from ForwardChaining import ForwardChaining
 from BackwardChaining import BackwardChaining
 from ResolutionProver import ResolutionProver
+from DPLL import DPLL
 
 def main():
     """
@@ -64,6 +65,10 @@ def main():
         query = Sentence(ask)
         rp = ResolutionProver(kb, query, debug=debug_mode)
         print("YES" if rp.solve() else "NO")
+    elif method == 'DPLL':
+        query = Sentence(ask)
+        dpll = DPLL(kb, query,debug=debug_mode)
+        print("YES" if dpll.solve() else "NO")
     else:
         print("Unknown method entered.")
 
