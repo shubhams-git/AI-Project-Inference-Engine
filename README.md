@@ -53,7 +53,7 @@ SymPy is a Python library for symbolic mathematics. In this project, SymPy is us
 
 2. Navigate to the cloned repository:
     ```bash
-    cd Assignment_2
+    cd AI-Project-Inference-Engine
     ```
 
 3. Install required Python packages:
