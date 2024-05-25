@@ -4,7 +4,14 @@ import sympy
 
 class DPLL:
     def __init__(self, knowledge_base, query, debug=False):
-        """Initialize the DPLL solver with a knowledge base, a query, and an optional debug mode."""
+        """
+        Initialize the DPLL solver with a knowledge base, a query, and an optional debug mode.
+        
+        Args:
+            knowledge_base (KnowledgeBase): The knowledge base containing propositional sentences.
+            query (Sentence): The query sentence to be solved.
+            debug (bool): Flag to enable debug mode for detailed steps.
+        """
         self.kb = knowledge_base
         self.query = query
         self.debug = debug
@@ -15,7 +22,12 @@ class DPLL:
             print(*args, **kwargs)
     
     def solve(self):
-        """Solve the query using the DPLL algorithm."""
+        """
+        Solve the query using the DPLL algorithm.
+
+        Returns:
+            bool: True if the query is satisfiable, False otherwise.
+        """
         self.debug_print("Starting DPLL algorithm...")
         clauses = self.parse_kb()
         self.debug_print("Initial clauses from knowledge base:")
@@ -38,7 +50,12 @@ class DPLL:
         return result
     
     def parse_kb(self):
-        """Parse the knowledge base and convert it to a list of clauses in CNF."""
+        """
+        Parse the knowledge base and convert it to a list of clauses in CNF.
+
+        Returns:
+            list: List of clauses in CNF form.
+        """
         clauses = []
         for sentence in self.kb.sentences:
             cnf = to_cnf(sentence.to_sympy_expr(sentence.root[0]))
@@ -46,7 +63,15 @@ class DPLL:
         return clauses
 
     def extract_clauses(self, cnf_expr):
-        """Extract clauses from a CNF expression."""
+        """
+        Extract clauses from a CNF expression.
+
+        Args:
+            cnf_expr (sympy.Expr): CNF expression.
+
+        Returns:
+            list: List of individual clauses.
+        """
         if isinstance(cnf_expr, sympy.Or):
             return [cnf_expr]
         elif isinstance(cnf_expr, sympy.And):
@@ -55,33 +80,45 @@ class DPLL:
             return [cnf_expr]
 
     def negate_query(self):
-        """Negate the query and convert it to CNF."""
+        """
+        Negate the query and convert it to CNF.
+
+        Returns:
+            list: List of clauses representing the negated query in CNF.
+        """
         query_expr = self.query.to_sympy_expr(self.query.root[0])
         query_cnf = to_cnf(Not(query_expr))
         return self.extract_clauses(query_cnf)
 
     def dpll(self, clauses, symbols, model):
-        """Apply the DPLL algorithm to determine satisfiability."""
+        """
+        Apply the DPLL algorithm to determine satisfiability.
+
+        Args:
+            clauses (list): List of clauses.
+            symbols (set): Set of propositional symbols.
+            model (dict): Current truth assignment model.
+
+        Returns:
+            bool: True if the clauses are satisfiable, False otherwise.
+        """
         self.debug_print("\nCurrent model:", model)
         self.debug_print("Remaining clauses:")
         for clause in clauses:
             self.debug_print(f"  {clause}")
         self.debug_print("Remaining symbols:", symbols)
 
-        # Base case: check if all clauses are satisfied
         all_satisfied = all(self.evaluate(clause, model) is True for clause in clauses)
         self.debug_print(f"All clauses satisfied check: {all_satisfied}")
         if all_satisfied:
             self.debug_print("All clauses satisfied with current model.")
             return True
         
-        # Base case: check if any clause is unsatisfied
         unsat_clauses = [clause for clause in clauses if self.evaluate(clause, model) is False]
         if unsat_clauses:
             self.debug_print(f"Unsatisfied clauses: {unsat_clauses}")
             return False
 
-        # Perform unit propagation
         self.debug_print("\nPerforming unit propagation...")
         unit_clauses = self.find_unit_clauses(clauses)
         self.debug_print(f"Initial unit clauses: {unit_clauses}")
@@ -99,7 +136,6 @@ class DPLL:
             for clause in clauses:
                 self.debug_print(f"    {clause}")
 
-            # Reevaluate after simplification
             all_satisfied = all(self.evaluate(clause, model) is True for clause in clauses)
             self.debug_print(f"All clauses satisfied check after propagation: {all_satisfied}")
             if all_satisfied:
@@ -117,7 +153,6 @@ class DPLL:
             self.debug_print("No symbols left to process. Returning False.")
             return False
 
-        # Choose a literal and recurse
         P = next(iter(symbols))
         rest = symbols - {P}
         new_model = model.copy()
@@ -133,7 +168,15 @@ class DPLL:
         return self.dpll(clauses, rest, new_model)
 
     def find_unit_clauses(self, clauses):
-        """Identify unit clauses from the list of clauses."""
+        """
+        Identify unit clauses from the list of clauses.
+
+        Args:
+            clauses (list): List of clauses.
+
+        Returns:
+            list: List of unit clauses.
+        """
         unit_clauses = []
         self.debug_print("\nFinding unit clauses...")
         for clause in clauses:
@@ -147,7 +190,16 @@ class DPLL:
         return unit_clauses
 
     def simplify(self, clauses, literal):
-        """Simplify the clause set given a literal assignment."""
+        """
+        Simplify the clause set given a literal assignment.
+
+        Args:
+            clauses (list): List of clauses.
+            literal (sympy.Symbol): Literal to be propagated.
+
+        Returns:
+            list: Simplified list of clauses.
+        """
         new_clauses = []
         self.debug_print(f"Simplifying clauses with {literal} set to True")
         for clause in clauses:
@@ -173,7 +225,16 @@ class DPLL:
         return new_clauses
 
     def evaluate(self, clause, model):
-        """Evaluate a clause under the current model."""
+        """
+        Evaluate a clause under the current model.
+
+        Args:
+            clause (sympy.Expr): Clause to be evaluated.
+            model (dict): Current truth assignment model.
+
+        Returns:
+            bool: Evaluation result.
+        """
         if isinstance(clause, sympy.Symbol):
             return model.get(clause, None)
         if isinstance(clause, Not):
@@ -196,13 +257,11 @@ class DPLL:
                 return None
         return None
 
-# Example usage
 if __name__ == "__main__":
     import sys
     debug_mode = True  # Ensure debug mode is enabled
     from KnowledgeBase import KnowledgeBase
 
-    # Example usage
     tell = ["a", "a => b", "b => c", "b&c=>d", "d=>e"]
     ask = "e"
     kb = KnowledgeBase(tell, 'GS')
