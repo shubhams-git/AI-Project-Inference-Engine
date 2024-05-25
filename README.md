@@ -48,7 +48,7 @@ SymPy is a Python library for symbolic mathematics. In this project, SymPy is us
 ## Installation
 1. Clone the repository:
     ```bash
-    git clone https://github.com/shubhams-git/Assignment_2.git
+    git clone https://github.com/shubhams-git/AI-Project-Inference-Engine.git
     ```
 
 2. Navigate to the cloned repository:
