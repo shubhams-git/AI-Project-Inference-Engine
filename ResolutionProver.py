@@ -8,9 +8,10 @@ class ResolutionProver:
         """
         Initialize the ResolutionProver with a knowledge base and a query.
 
-        :param kb: The knowledge base consisting of propositional logic sentences.
-        :param query: The query sentence to be resolved.
-        :param debug: Flag to indicate whether to print detailed resolution steps.
+        Args:
+            kb (KnowledgeBase): The knowledge base consisting of propositional logic sentences.
+            query (Sentence): The query sentence to be resolved.
+            debug (bool): Flag to enable debug mode for detailed steps.
         """
         self.kb = kb
         self.query = query
@@ -21,21 +22,17 @@ class ResolutionProver:
         """
         Parse the knowledge base into a list of CNF clauses.
 
-        :return: A list of CNF clauses derived from the knowledge base sentences.
+        Returns:
+            list: A list of CNF clauses derived from the knowledge base sentences.
         """
         clauses = []
         for sentence in self.kb.sentences:
-            # Get the sympy expression of the original sentence
             original_expr = sentence.to_sympy_expr(sentence.root[0])
-
-            # Check if the expression is already in CNF
             if not self.is_cnf(original_expr):
-                # Convert the expression to CNF if not already in CNF
                 cnf_expr = to_cnf(original_expr, simplify=True)
             else:
                 cnf_expr = original_expr
 
-            # Extract the CNF clauses
             clauses.extend(self.extract_clauses(cnf_expr))
         return clauses
 
@@ -43,8 +40,11 @@ class ResolutionProver:
         """
         Extract individual clauses from a CNF expression.
 
-        :param cnf_expr: The CNF expression.
-        :return: A list of clauses (each clause is an instance of sympy.Or or a literal).
+        Args:
+            cnf_expr (sympy.Expr): The CNF expression.
+
+        Returns:
+            list: A list of clauses (each clause is an instance of sympy.Or or a literal).
         """
         if isinstance(cnf_expr, sympy.And):
             clauses = []
@@ -62,20 +62,16 @@ class ResolutionProver:
         """
         Negate the query and convert it into CNF.
 
-        :return: A list of CNF clauses derived from the negated query.
+        Returns:
+            list: A list of CNF clauses derived from the negated query.
         """
         query_expr = self.query.to_sympy_expr(self.query.root[0])
-
-        # First, convert the query expression to CNF
         if not self.is_cnf(query_expr):
             query_cnf = to_cnf(query_expr, simplify=True)
         else:
             query_cnf = query_expr
 
-        # Negate the CNF query expression
         negated_query_expr = Not(query_cnf)
-
-        # Convert the negated query expression to CNF
         negated_query_cnf = to_cnf(negated_query_expr, simplify=True)
 
         return self.extract_clauses(negated_query_cnf)
@@ -84,10 +80,13 @@ class ResolutionProver:
         """
         Resolve two clauses to find their resolvents.
 
-        :param clause1: The first clause (a set of literals).
-        :param clause2: The second clause (a set of literals).
-        :return: A tuple (is_resolved, resolvents) where is_resolved is True if a contradiction is found,
-                and resolvents is a list of resolvent clauses.
+        Args:
+            clause1 (sympy.Expr): The first clause.
+            clause2 (sympy.Expr): The second clause.
+
+        Returns:
+            tuple: A tuple (is_resolved, resolvents) where is_resolved is True if a contradiction is found,
+                   and resolvents is a list of resolvent clauses.
         """
         resolvents = []
         clause1 = set(clause1.args) if isinstance(clause1, sympy.Or) else {clause1}
@@ -118,7 +117,8 @@ class ResolutionProver:
         """
         Attempt to resolve the query using the resolution method.
 
-        :return: True if the query is entailed by the knowledge base, False otherwise.
+        Returns:
+            bool: True if the query is entailed by the knowledge base, False otherwise.
         """
         clauses = self.parse_kb()
         negated_query_clauses = self.negate_query()
@@ -134,7 +134,7 @@ class ResolutionProver:
 
         new = set(negated_query_clauses)
         processed = set()
-        self.resolved_literals = set()  # Initialize resolved literals tracking
+        self.resolved_literals = set()
 
         if self.debug:
             print("Starting the Resolution Process")
@@ -156,14 +156,11 @@ class ResolutionProver:
                 for resolvent in resolvents:
                     if resolvent not in clauses and resolvent not in new:
                         if isinstance(resolvent, sympy.Symbol):
-                            # Single literal case
                             all_resolved = resolvent in self.resolved_literals or Not(resolvent) in self.resolved_literals
                         else:
-                            # Multiple literals case (Or expression)
                             all_resolved = all(literal in self.resolved_literals or Not(literal) in self.resolved_literals for literal in resolvent.args)
                         
                         if all_resolved:
-                            # All literals in the resolvent have already been resolved
                             if self.debug:
                                 print("-" * 40)
                                 print(f"All literals in the resolvent {resolvent} have already been resolved.")
@@ -182,14 +179,15 @@ class ResolutionProver:
             processed.add(clause1)
         return False
 
-
-
     def is_cnf(self, expr):
         """
         Check if a given SymPy expression is in CNF form.
 
-        :param expr: The SymPy expression to check.
-        :return: True if the expression is in CNF, False otherwise.
+        Args:
+            expr (sympy.Expr): The SymPy expression to check.
+
+        Returns:
+            bool: True if the expression is in CNF, False otherwise.
         """
         if isinstance(expr, sympy.And):
             return all(self.is_cnf(arg) for arg in expr.args)
@@ -197,7 +195,6 @@ class ResolutionProver:
             return all(not isinstance(arg, sympy.And) for arg in expr.args)
         return not isinstance(expr, (sympy.And, sympy.Or))
 
-# Example usage
 if __name__ == "__main__":
     import sys
     debug_mode = "-d" in sys.argv

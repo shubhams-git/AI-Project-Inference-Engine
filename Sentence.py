@@ -10,19 +10,16 @@ class Sentence:
         Args:
             sentence (str): The propositional logic sentence to be parsed.
         """
-        self.symbols = []  # List to store all unique symbols in the sentence.
-        self.root = []  # Root atomic sentence from which child sentences branch.
-        self.atomic = {}  # Dictionary to store atomic sentences keyed by custom identifiers.
+        self.symbols = []
+        self.root = []
+        self.atomic = {}
 
-        # Split the original sentence into components and remove whitespace.
         original = re.split(r"(=>|&|\(|\)|~|\|\||<=>)", sentence)
         self.original = [part.strip() for part in original if part.strip()]
 
-        # Extract symbols while handling negations correctly.
         symbols = re.split(r"=>|&|\(|\)|\|\||<=>|~", sentence)
         self.symbols = [part.strip() for part in symbols if part.strip()]
 
-        # Parse the sentence to create a structured representation.
         self.root = self.__parse(self.original)
 
     def __parse(self, parts):
@@ -149,7 +146,7 @@ class Sentence:
         Converts the atomic sentence to a SymPy expression.
 
         Args:
-            atom: Atomic sentence to be converted.
+            atom (str): Atomic sentence to be converted.
 
         Returns:
             sympy.Expr: The corresponding SymPy expression.
@@ -182,7 +179,6 @@ class Sentence:
         """
         root_expr = self.to_sympy_expr(self.root[0])
         
-        # Explicitly convert specific parts to CNF
         if isinstance(root_expr, And):
             clauses = []
             for arg in root_expr.args:
@@ -203,8 +199,11 @@ class Sentence:
         """
         Check if a given SymPy expression is in CNF form.
         
-        :param expr: The SymPy expression to check.
-        :return: True if the expression is in CNF, False otherwise.
+        Args:
+            expr (sympy.Expr): The SymPy expression to check.
+        
+        Returns:
+            bool: True if the expression is in CNF, False otherwise.
         """
         if isinstance(expr, sympy.And):
             return all(self.is_cnf(arg) for arg in expr.args)
@@ -213,7 +212,6 @@ class Sentence:
         return not isinstance(expr, (sympy.And, sympy.Or))
 
 if __name__ == "__main__":
-    # Example usage:
     sentence = Sentence("(a <=> (c => ~d)) & b & (b => a)")
     cnf = sentence.to_cnf_atomic()
     print(f"Original expression: (a <=> (c => ~d)) & b & (b => a)")

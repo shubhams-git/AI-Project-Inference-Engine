@@ -5,8 +5,9 @@ class TruthTable:
     def __init__(self, knowledge_base):
         """
         Initializes the TruthTable with a given knowledge base.
-        
-        :param knowledge_base: The knowledge base containing propositional logic sentences.
+
+        Args:
+            knowledge_base (KnowledgeBase): The knowledge base containing propositional logic sentences.
         """
         self.kb = knowledge_base
         self.count = 0
@@ -14,17 +15,21 @@ class TruthTable:
     def generate_truth_assignments(self):
         """
         Generates all possible truth assignments for the symbols in the knowledge base.
-        
-        :return: A list of tuples, each representing a possible truth assignment.
+
+        Returns:
+            list: A list of tuples, each representing a possible truth assignment.
         """
         return list(product([True, False], repeat=len(self.kb.symbols)))
 
     def evaluate_knowledge_base(self, assignments):
         """
         Evaluates the knowledge base against all possible truth assignments.
-        
-        :param assignments: A list of all possible truth assignments.
-        :return: A list of truth assignments that satisfy the knowledge base.
+
+        Args:
+            assignments (list): A list of all possible truth assignments.
+
+        Returns:
+            list: A list of truth assignments that satisfy the knowledge base.
         """
         satisfying_models = []
         for assignment in assignments:
@@ -37,14 +42,16 @@ class TruthTable:
     def check_query_entailment(self, query, satisfying_models):
         """
         Checks if the query is entailed by the knowledge base using the satisfying models.
-        
-        :param query: The query sentence to be checked.
-        :param satisfying_models: A list of models that satisfy the knowledge base.
-        :return: "YES" if the query is entailed, otherwise "NO".
+
+        Args:
+            query (Sentence): The query sentence to be checked.
+            satisfying_models (list): A list of models that satisfy the knowledge base.
+
+        Returns:
+            str: "YES" if the query is entailed, otherwise "NO".
         """
         query_expr = query.to_sympy_expr(query.root[0])
         for model in satisfying_models:
-            # Check if all symbols in the query are in the model
             if all(symbol in model for symbol in query.symbols):
                 if not query.solve(model):
                     return "NO"
@@ -55,16 +62,18 @@ class TruthTable:
     def solve(self, query):
         """
         Solves the query using the truth table method.
-        
-        :param query: The query sentence to be solved.
-        :return: The result of the query entailment check.
+
+        Args:
+            query (Sentence): The query sentence to be solved.
+
+        Returns:
+            str: The result of the query entailment check.
         """
         assignments = self.generate_truth_assignments()
         models = self.evaluate_knowledge_base(assignments)
         result = self.check_query_entailment(query, models)
         return result
 
-# Example usage
 if __name__ == "__main__":
     from KnowledgeBase import KnowledgeBase
     from FileReader import FileReader

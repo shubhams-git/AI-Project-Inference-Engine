@@ -24,7 +24,7 @@ This project implements an inference engine for propositional logic using variou
 - [Acknowledgements](#acknowledgements)
 
 ## Overview
-This Logical Inference Engine project implements various logical inference methods to answer queries based on a given knowledge base. The project supports multiple methods such as Truth Table, Forward Chaining, Backward Chaining, and Resolution Prover to explore different logical reasoning techniques in artificial intelligence.
+This Logical Inference Engine project implements various logical inference methods to answer queries based on a given knowledge base. The project supports multiple methods such as Truth Table, Forward Chaining, Backward Chaining, Resolution Prover and DPLL (Davis-Putnam-Logemann-Loveland) to explore different logical reasoning techniques in artificial intelligence.
 
 ## Frameworks and Languages
 
